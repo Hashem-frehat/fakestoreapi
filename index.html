@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Product Store</title>
+</head>
+<body>
+    <header>
+        <h1>Product Store</h1>
+    </header>
+    
+    <main>
+        <div id="mo"></div>
+        <div id="aa"></div>
+        <div id="card"></div>
+        <form id="post-form">
+            <input type="text" id="title" placeholder="Title" required>
+            <input type="text" id="price" placeholder="Price" required>
+            <textarea id="description" placeholder="Description" required></textarea>
+            <input type="text" id="image" placeholder="Image URL" required>
+            <button type="submit" id="submit">Post</button>
+        </form>
+    </main>
+    
+    <footer>
+        <p>&copy; 2024 Product Store</p>
+    </footer>
+<script src="app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
+    <script type="module">
+      
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, set, get, child, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyA902KhO4dJ4GTFP8kCSzAph97NdjybMeM",
+            authDomain: "fire-base-e5ddc.firebaseapp.com",
+            databaseURL: "https://fire-base-e5ddc-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "fire-base-e5ddc",
+            storageBucket: "fire-base-e5ddc.appspot.com",
+            messagingSenderId: "226774166949",
+            appId: "1:226774166949:web:ab71c2809c2ec5f1a3cc4c",
+            measurementId: "G-JDNSZ1KTSH"
+        };
+        
+    
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        
+     
+        function addProduct(productId, title, price, description, image) {
+            set(ref(db, 'products/' + productId), {
+                title: title,
+                price: price,
+                description: description,
+                image: image
+            });
+        }
+
+        
+        function getProducts() {
+            const dbRef = ref(db);
+            get(child(dbRef, 'products/')).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const products = snapshot.val();
+                    let aa = document.getElementById("aa");
+                    aa.innerHTML = ''; // Clear previous products
+                    for (let id in products) {
+                        let product = products[id];
+                        let x = document.createElement("div");
+                        x.className = "card";
+                        let val = `
+                            <h2>${product.title}</h2>
+                            <p>Price: ${product.price}</p>
+                            <p>Description: ${product.description}</p>
+                            <img src="${product.image}" alt="${product.title}" style="width:500px;height:500px;">
+                            <button onclick="deleteProduct('${id}')">Delete</button>
+                            <button onclick="updateProduct('${id}', 'New Title', 'New Price', 'New Description', 'New Image')">Update</button>
+                        `;
+                        x.innerHTML = val;
+                        aa.appendChild(x);
+                    }
+                } else {
+                    console.log("No data available");
+                }
+            }).catch((error) => {
+                console.error(error);
+            });
+        }
+        
+      
+        function updateProduct(productId, newTitle, newPrice, newDescription, newImage) {
+            update(ref(db, 'products/' + productId), {
+                title: newTitle,
+                price: newPrice,
+                description: newDescription,
+                image: newImage
+            });
+        }
+
+       
+        function deleteProduct(productId) {
+            remove(ref(db, 'products/' + productId));
+        }
+
+        
+        getProducts();
+        
+      
+        document.getElementById("post-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value;
+            const price = document.getElementById('price').value;
+            const description = document.getElementById('description').value;
+            const image = document.getElementById('image').value;
+            const productId = Date.now().toString(); // Generate a unique ID based on timestamp
+            
+            addProduct(productId, title, price, description, image);
+            
+            
+            document.getElementById('title').value = '';
+            document.getElementById('price').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('image').value = '';
+            
+          
+            getProducts();
+        });
+        
+    
+        window.updateProduct = updateProduct;
+        window.deleteProduct = deleteProduct;
+    </script>
+</body>
+</html>
