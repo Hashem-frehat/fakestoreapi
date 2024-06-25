@@ -27,15 +27,13 @@
     <footer>
         <p>&copy; 2024 Product Store</p>
     </footer>
-<script src="app.js"></script>
+    <script src="app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js"></script>
     <script type="module">
-      
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getDatabase, ref, set, get, child, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-        
-        
+
         const firebaseConfig = {
             apiKey: "AIzaSyA902KhO4dJ4GTFP8kCSzAph97NdjybMeM",
             authDomain: "fire-base-e5ddc.firebaseapp.com",
@@ -46,12 +44,10 @@
             appId: "1:226774166949:web:ab71c2809c2ec5f1a3cc4c",
             measurementId: "G-JDNSZ1KTSH"
         };
-        
-    
+
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        
-     
+
         function addProduct(productId, title, price, description, image) {
             set(ref(db, 'products/' + productId), {
                 title: title,
@@ -61,7 +57,6 @@
             });
         }
 
-        
         function getProducts() {
             const dbRef = ref(db);
             get(child(dbRef, 'products/')).then((snapshot) => {
@@ -73,13 +68,14 @@
                         let product = products[id];
                         let x = document.createElement("div");
                         x.className = "card";
+                        x.id = `product-${id}`; // Assign unique ID to each card
                         let val = `
                             <h2>${product.title}</h2>
                             <p>Price: ${product.price}</p>
                             <p>Description: ${product.description}</p>
                             <img src="${product.image}" alt="${product.title}" style="width:500px;height:500px;">
                             <button onclick="deleteProduct('${id}')">Delete</button>
-                            <button onclick="updateProduct('${id}', 'New Title', 'New Price', 'New Description', 'New Image')">Update</button>
+                            <button onclick="updateProductForm('${id}', '${product.title}', '${product.price}', '${product.description}', '${product.image}')">Update</button>
                         `;
                         x.innerHTML = val;
                         aa.appendChild(x);
@@ -91,50 +87,67 @@
                 console.error(error);
             });
         }
-        
-      
+
         function updateProduct(productId, newTitle, newPrice, newDescription, newImage) {
             update(ref(db, 'products/' + productId), {
                 title: newTitle,
                 price: newPrice,
                 description: newDescription,
                 image: newImage
+            }).then(() => {
+                let card = document.getElementById(`product-${productId}`);
+                if (card) {
+                    card.querySelector("h2").textContent = newTitle;
+                    card.querySelector("p:nth-child(2)").textContent = `Price: ${newPrice}`;
+                    card.querySelector("p:nth-child(3)").textContent = `Description: ${newDescription}`;
+                    card.querySelector("img").src = newImage;
+                }
             });
         }
 
-       
         function deleteProduct(productId) {
-            remove(ref(db, 'products/' + productId));
+            remove(ref(db, 'products/' + productId)).then(() => {
+                let card = document.getElementById(`product-${productId}`);
+                if (card) {
+                    card.remove();
+                }
+            });
         }
 
-        
+        function updateProductForm(productId, title, price, description, image) {
+            const newTitle = prompt("New Title:", title);
+            const newPrice = prompt("New Price:", price);
+            const newDescription = prompt("New Description:", description);
+            const newImage = prompt("New Image URL:", image);
+
+            if (newTitle !== null && newPrice !== null && newDescription !== null && newImage !== null) {
+                updateProduct(productId, newTitle, newPrice, newDescription, newImage);
+            }
+        }
+
         getProducts();
-        
-      
+
         document.getElementById("post-form").addEventListener("submit", function (e) {
             e.preventDefault();
-            
             const title = document.getElementById('title').value;
             const price = document.getElementById('price').value;
             const description = document.getElementById('description').value;
             const image = document.getElementById('image').value;
             const productId = Date.now().toString(); // Generate a unique ID based on timestamp
-            
+
             addProduct(productId, title, price, description, image);
-            
-            
+
             document.getElementById('title').value = '';
             document.getElementById('price').value = '';
             document.getElementById('description').value = '';
             document.getElementById('image').value = '';
-            
-          
+
             getProducts();
         });
-        
-    
+
         window.updateProduct = updateProduct;
         window.deleteProduct = deleteProduct;
+        window.updateProductForm = updateProductForm;
     </script>
 </body>
 </html>
